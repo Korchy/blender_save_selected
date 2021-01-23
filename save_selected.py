@@ -4,31 +4,52 @@
 # GitHub
 #    https://github.com/Korchy/blender_save_selected
 
-import tempfile
 import os
+import subprocess
+import tempfile
 
 
 class SaveSelected:
 
+    _tmp_name = 'save_selection'
+
     @classmethod
-    def save_selected(cls, context, scene_data, file_path):
+    def save_selected(cls, context, scene_data, file_path, blender_path):
         # save selected objects
-
-        text_block = scene_data.texts.new(name='save_selected')
-        text_block_txt = \
-            '''import bpy
-            for obj in bpy.data.objects:
-                bpy.context.scene.collection.objects.link(obj)
-            bpy.ops.wm.save_as_mainfile(filepath="''' + file_path + '''")
-        '''
-        text_block.from_string(text_block_txt)
-        text_block.name = 'save_selected'
-
-        temp_file_path = os.path.join(tempfile.gettempdir(), 'save_selection_tmp.blend')
-        data_blocks = set(bpy.context.selected_objects).union({text_block})
-        bpy.data.libraries.write(temp_file_path, data_blocks)
-
-        blender_path = bpy.app.binary_path
-
-        import subprocess
-        subprocess.call([blender_path, "-b", temp_file_path, "--python-text", "save_selected"])
+        temp_dir = tempfile.gettempdir()
+        # files path
+        temp_py_path = os.path.join(temp_dir, cls._tmp_name + '.py').replace('\\', '/')
+        temp_blend_path = os.path.join(temp_dir, cls._tmp_name + '.blend').replace('\\', '/')
+        file_path = file_path.replace('\\', '/')
+        # write selected objects to temporary library
+        data_blocks = set(context.selected_objects)
+        scene_data.libraries.write(temp_blend_path, data_blocks)
+        # make py script for import from temporary library, placing objects in the center of the scene and saving to dest file
+        text_block_content = 'import bpy' + '\n'
+        text_block_content += 'src_path="' + temp_blend_path + '"' + '\n'
+        text_block_content += 'dest_path="' + file_path + '"' + '\n'
+        text_block_content += 'with bpy.data.libraries.load(src_path) as (data_from, data_to):' + '\n'
+        text_block_content += '    data_to.objects = data_from.objects' + '\n'
+        text_block_content += 'for obj in data_to.objects:' + '\n'
+        text_block_content += '    bpy.context.scene.collection.objects.link(obj)' + '\n'
+        text_block_content += 'bpy.ops.object.select_all(action="SELECT")' + '\n'
+        # place imported object to the center of the scene
+        text_block_content += 'bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)' + '\n'
+        text_block_content += 'win = bpy.context.window' + '\n'
+        text_block_content += 'scr = win.screen' + '\n'
+        text_block_content += 'areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]' + '\n'
+        text_block_content += 'region = [region for region in areas3d[0].regions if region.type == "WINDOW"]' + '\n'
+        text_block_content += 'override = {"window": win,' + '\n'
+        text_block_content += '    "screen":scr,' + '\n'
+        text_block_content += '    "area":areas3d[0],' + '\n'
+        text_block_content += '    "region":region,' + '\n'
+        text_block_content += '    "scene" :bpy.context.scene,' + '\n'
+        text_block_content += '}' + '\n'
+        text_block_content += 'bpy.ops.view3d.snap_selected_to_cursor(override, use_offset=True)' + '\n'
+        # save to dest file
+        text_block_content += 'bpy.ops.wm.save_as_mainfile(filepath=dest_path)' + '\n'
+        # save script to temporary directory
+        with open(file=temp_py_path, mode='w', encoding='utf8') as py_file:
+            py_file.write(text_block_content)
+        # execute script in subprocess
+        subprocess.call([blender_path, '-b', '--python', temp_py_path])

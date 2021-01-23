@@ -29,7 +29,8 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
         SaveSelected.save_selected(
             context=context,
             scene_data=bpy.data,
-            file_path=self.filepath
+            file_path=self.filepath,
+            blender_path=bpy.app.binary_path
         )
         return {'FINISHED'}
 
