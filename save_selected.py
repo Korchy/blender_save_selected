@@ -14,7 +14,7 @@ class SaveSelected:
     _tmp_name = 'save_selection'
 
     @classmethod
-    def save_selected(cls, context, scene_data, file_path, blender_path):
+    def save_selected(cls, context, file_path, blender_path, to_world_origin):
         # save selected objects
         temp_dir = tempfile.gettempdir()
         # files path
@@ -23,7 +23,7 @@ class SaveSelected:
         file_path = file_path.replace('\\', '/')
         # write selected objects to temporary library
         data_blocks = set(context.selected_objects)
-        scene_data.libraries.write(temp_blend_path, data_blocks)
+        context.blend_data.libraries.write(temp_blend_path, data_blocks)
         # make py script for import from temporary library, placing objects in the center of the scene and saving to dest file
         text_block_content = 'import bpy' + '\n'
         text_block_content += 'src_path="' + temp_blend_path + '"' + '\n'
@@ -34,18 +34,19 @@ class SaveSelected:
         text_block_content += '    bpy.context.scene.collection.objects.link(obj)' + '\n'
         text_block_content += 'bpy.ops.object.select_all(action="SELECT")' + '\n'
         # place imported object to the center of the scene
-        text_block_content += 'bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)' + '\n'
-        text_block_content += 'win = bpy.context.window' + '\n'
-        text_block_content += 'scr = win.screen' + '\n'
-        text_block_content += 'areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]' + '\n'
-        text_block_content += 'region = [region for region in areas3d[0].regions if region.type == "WINDOW"]' + '\n'
-        text_block_content += 'override = {"window": win,' + '\n'
-        text_block_content += '    "screen":scr,' + '\n'
-        text_block_content += '    "area":areas3d[0],' + '\n'
-        text_block_content += '    "region":region,' + '\n'
-        text_block_content += '    "scene" :bpy.context.scene,' + '\n'
-        text_block_content += '}' + '\n'
-        text_block_content += 'bpy.ops.view3d.snap_selected_to_cursor(override, use_offset=True)' + '\n'
+        if to_world_origin:
+            text_block_content += 'bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)' + '\n'
+            text_block_content += 'win = bpy.context.window' + '\n'
+            text_block_content += 'scr = win.screen' + '\n'
+            text_block_content += 'areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]' + '\n'
+            text_block_content += 'region = [region for region in areas3d[0].regions if region.type == "WINDOW"]' + '\n'
+            text_block_content += 'override = {"window": win,' + '\n'
+            text_block_content += '    "screen":scr,' + '\n'
+            text_block_content += '    "area":areas3d[0],' + '\n'
+            text_block_content += '    "region":region,' + '\n'
+            text_block_content += '    "scene" :bpy.context.scene,' + '\n'
+            text_block_content += '}' + '\n'
+            text_block_content += 'bpy.ops.view3d.snap_selected_to_cursor(override, use_offset=True)' + '\n'
         # save to dest file
         text_block_content += 'bpy.ops.wm.save_as_mainfile(filepath=dest_path)' + '\n'
         # save script to temporary directory

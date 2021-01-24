@@ -16,7 +16,7 @@ bl_info = {
     'author': 'Nikita Akimov',
     'version': (1, 0, 0),
     'blender': (2, 91, 0),
-    'location': 'Menu: File - Export',
+    'location': 'Main menu: File – Export – Save Selected',
     'wiki_url': 'https://b3d.interplanety.org/en/blender-add-on-save-selected/',
     'tracker_url': 'https://b3d.interplanety.org/en/blender-add-on-save-selected/',
     'description': 'Save only selected objects from the current file'

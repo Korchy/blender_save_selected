@@ -6,7 +6,7 @@
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
-from bpy.props import StringProperty
+from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator
 from bpy.utils import register_class, unregister_class
 from .save_selected import SaveSelected
@@ -25,12 +25,17 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
         options={'HIDDEN'}
     )
 
+    to_world_origin: BoolProperty(
+        name='Move to world origin',
+        default=False
+    )
+
     def execute(self, context):
         SaveSelected.save_selected(
             context=context,
-            scene_data=bpy.data,
             file_path=self.filepath,
-            blender_path=bpy.app.binary_path
+            blender_path=bpy.app.binary_path,
+            to_world_origin=self.to_world_origin
         )
         return {'FINISHED'}
 
