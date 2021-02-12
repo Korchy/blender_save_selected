@@ -14,7 +14,7 @@ class SaveSelected:
     _tmp_name = 'save_selection'
 
     @classmethod
-    def save_selected(cls, context, file_path, blender_path, to_world_origin):
+    def save_selected(cls, context, file_path, blender_path, to_world_origin, cleanup_startup_file):
         # save selected objects
         temp_dir = tempfile.gettempdir()
         # files path
@@ -26,6 +26,9 @@ class SaveSelected:
         context.blend_data.libraries.write(temp_blend_path, data_blocks)
         # make py script for import from temporary library, placing objects in the center of the scene and saving to dest file
         text_block_content = 'import bpy' + '\n'
+        if cleanup_startup_file:
+            text_block_content += 'for obj in bpy.data.objects:' + '\n'
+            text_block_content += '    bpy.data.objects.remove(obj)' + '\n'
         text_block_content += 'src_path="' + temp_blend_path + '"' + '\n'
         text_block_content += 'dest_path="' + file_path + '"' + '\n'
         text_block_content += 'with bpy.data.libraries.load(src_path) as (data_from, data_to):' + '\n'

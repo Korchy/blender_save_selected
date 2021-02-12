@@ -25,6 +25,11 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
         options={'HIDDEN'}
     )
 
+    cleanup_startup_file: BoolProperty(
+        name='Cleanup startup file',
+        default=True
+    )
+
     to_world_origin: BoolProperty(
         name='Move to world origin',
         default=False
@@ -35,7 +40,8 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
             context=context,
             file_path=self.filepath,
             blender_path=bpy.app.binary_path,
-            to_world_origin=self.to_world_origin
+            to_world_origin=self.to_world_origin,
+            cleanup_startup_file=self.cleanup_startup_file
         )
         return {'FINISHED'}
 

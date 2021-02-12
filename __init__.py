@@ -14,7 +14,7 @@ bl_info = {
     'name': 'Save Selected',
     'category': 'All',
     'author': 'Nikita Akimov',
-    'version': (1, 0, 0),
+    'version': (1, 0, 1),
     'blender': (2, 91, 0),
     'location': 'Main menu: File – Export – Save Selected',
     'wiki_url': 'https://b3d.interplanety.org/en/blender-add-on-save-selected/',
