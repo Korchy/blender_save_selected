@@ -13,11 +13,11 @@ The selected objects will be saved to the specified file.
 
 Current add-on version
 -
-1.0.1.
+1.0.2.
 
 Blender versions
 -
-2.91
+2.83, 2.90, 2.91, 2.92
 
 Location and call
 -
@@ -30,6 +30,9 @@ Installation
 
 Version history
 -
+1.0.2.
+- Checked with 2.83 LTS
+
 1.0.1.
 - Added option to clean up startup file when saving
 
