@@ -14,7 +14,7 @@ bl_info = {
     'name': 'Save Selected',
     'category': 'All',
     'author': 'Nikita Akimov',
-    'version': (1, 0, 2),
+    'version': (1, 0, 3),
     'blender': (2, 83, 0),
     'location': 'Main menu: File – Export – Save Selected',
     'wiki_url': 'https://b3d.interplanety.org/en/blender-add-on-save-selected/',
@@ -29,7 +29,9 @@ def register():
         save_selected_ui.register()
         save_selected_keymap.register()
     else:
-        print('It seems you are trying to use the dev version of the ' + bl_info['name'] + ' add-on. It may work not properly. Please download and use the release version')
+        print('It seems you are trying to use the dev version of the '
+              + bl_info['name']
+              + ' add-on. It may work not properly. Please download and use the release version')
 
 
 def unregister():

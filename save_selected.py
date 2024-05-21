@@ -24,7 +24,8 @@ class SaveSelected:
         # write selected objects to temporary library
         data_blocks = set(context.selected_objects)
         context.blend_data.libraries.write(temp_blend_path, data_blocks)
-        # make py script for import from temporary library, placing objects in the center of the scene and saving to dest file
+        # make py script for import from temporary library, placing objects in the center of the scene
+        # and saving to dest file
         text_block_content = 'import bpy' + '\n'
         if cleanup_startup_file:
             text_block_content += 'for obj in bpy.data.objects:' + '\n'
@@ -42,14 +43,19 @@ class SaveSelected:
             text_block_content += 'win = bpy.context.window' + '\n'
             text_block_content += 'scr = win.screen' + '\n'
             text_block_content += 'areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]' + '\n'
-            text_block_content += 'region = [region for region in areas3d[0].regions if region.type == "WINDOW"]' + '\n'
-            text_block_content += 'override = {"window": win,' + '\n'
-            text_block_content += '    "screen":scr,' + '\n'
-            text_block_content += '    "area":areas3d[0],' + '\n'
-            text_block_content += '    "region":region,' + '\n'
-            text_block_content += '    "scene" :bpy.context.scene,' + '\n'
-            text_block_content += '}' + '\n'
-            text_block_content += 'bpy.ops.view3d.snap_selected_to_cursor(override, use_offset=True)' + '\n'
+            text_block_content += 'if bpy.app.version < (4, 0, 0):' + '\n'
+            text_block_content += '    region = [region for region in areas3d[0].regions if region.type == "WINDOW"]' \
+                                  + '\n'
+            text_block_content += '    override = {"window": win,' + '\n'
+            text_block_content += '        "screen":scr,' + '\n'
+            text_block_content += '        "area":areas3d[0],' + '\n'
+            text_block_content += '        "region":region,' + '\n'
+            text_block_content += '        "scene" :bpy.context.scene,' + '\n'
+            text_block_content += '    }' + '\n'
+            text_block_content += '    bpy.ops.view3d.snap_selected_to_cursor(override, use_offset=True)' + '\n'
+            text_block_content += 'else:' + '\n'
+            text_block_content += '    with bpy.context.temp_override(area=areas3d[0]):' + '\n'
+            text_block_content += '        bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)' + '\n'
         # save to dest file
         text_block_content += 'bpy.ops.wm.save_as_mainfile(filepath=dest_path)' + '\n'
         # save script to temporary directory

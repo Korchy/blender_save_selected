@@ -13,11 +13,11 @@ The selected objects will be saved to the specified file.
 
 Current add-on version
 -
-1.0.2.
+1.0.3.
 
 Blender versions
 -
-2.83, 2.90, 2.91, 2.92
+2.83, 2.90, 2.91, 2.92, 2.93, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.0, 4.1
 
 Location and call
 -
@@ -30,6 +30,9 @@ Installation
 
 Version history
 -
+1.0.3.
+- Updated for working with Blender 4.1
+
 1.0.2.
 - Checked with 2.83 LTS
 
