@@ -6,7 +6,7 @@
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 from bpy.utils import register_class, unregister_class
 from .save_selected import SaveSelected
@@ -35,13 +35,21 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
         default=False
     )
 
+    if bpy.app.version >= (5, 1, 0):
+        annotation_layer: EnumProperty(
+            name='Annotation Layer',
+            items=lambda self, context: SaveSelected.annotation_layers_names_items(self, context),
+            default=0
+        )
+
     def execute(self, context):
         SaveSelected.save_selected(
             context=context,
             file_path=self.filepath,
             blender_path=bpy.app.binary_path,
             to_world_origin=self.to_world_origin,
-            cleanup_startup_file=self.cleanup_startup_file
+            cleanup_startup_file=self.cleanup_startup_file,
+            add_annotation_layer=self.annotation_layer if hasattr(self, 'annotation_layer') else 'NONE'
         )
         return {'FINISHED'}
 

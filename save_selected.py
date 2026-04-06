@@ -7,6 +7,7 @@
 import os
 import subprocess
 import tempfile
+import bpy
 
 
 class SaveSelected:
@@ -14,7 +15,8 @@ class SaveSelected:
     _tmp_name = 'save_selection'
 
     @classmethod
-    def save_selected(cls, context, file_path, blender_path, to_world_origin, cleanup_startup_file):
+    def save_selected(cls, context, file_path, blender_path, to_world_origin, cleanup_startup_file,
+                      add_annotation_layer='NONE'):
         # save selected objects
         temp_dir = tempfile.gettempdir()
         # files path
@@ -23,7 +25,20 @@ class SaveSelected:
         file_path = file_path.replace('\\', '/')
         # write selected objects to temporary library
         data_blocks = set(context.selected_objects)
+        # if user used option to add annotation layer
+        annotations_copy = None     # temporary copy of annotations
+        if add_annotation_layer != 'NONE':
+            annotations_copy = context.scene.annotation.copy()
+            if add_annotation_layer != 'ALL':
+                no_save_layers = (_layer for _layer in annotations_copy.layers if _layer.info != add_annotation_layer)
+                for no_save_layer in no_save_layers:
+                    annotations_copy.layers.remove(no_save_layer)
+            data_blocks = set(context.selected_objects) | {annotations_copy, }
+        # save data to temporary lib file
         context.blend_data.libraries.write(temp_blend_path, data_blocks)
+        # cleanup temporary data
+        if annotations_copy:
+            context.blend_data.annotations.remove(annotations_copy)
         # make py script for import from temporary library, placing objects in the center of the scene
         # and saving to dest file
         text_block_content = 'import bpy' + '\n'
@@ -34,6 +49,7 @@ class SaveSelected:
         text_block_content += 'dest_path="' + file_path + '"' + '\n'
         text_block_content += 'with bpy.data.libraries.load(src_path) as (data_from, data_to):' + '\n'
         text_block_content += '    data_to.objects = data_from.objects' + '\n'
+        text_block_content += '    data_to.annotations = data_from.annotations' + '\n'
         text_block_content += 'for obj in data_to.objects:' + '\n'
         text_block_content += '    bpy.context.scene.collection.objects.link(obj)' + '\n'
         text_block_content += 'bpy.ops.object.select_all(action="SELECT")' + '\n'
@@ -56,6 +72,9 @@ class SaveSelected:
             text_block_content += 'else:' + '\n'
             text_block_content += '    with bpy.context.temp_override(area=areas3d[0]):' + '\n'
             text_block_content += '        bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)' + '\n'
+        # annotations
+        text_block_content += 'if data_to.annotations:' + '\n'
+        text_block_content += '    bpy.context.scene.annotation = data_to.annotations[0]' + '\n'
         # save to dest file
         text_block_content += 'bpy.ops.wm.save_as_mainfile(filepath=dest_path)' + '\n'
         # save script to temporary directory
@@ -63,3 +82,19 @@ class SaveSelected:
             py_file.write(text_block_content)
         # execute script in subprocess
         subprocess.call([blender_path, '-b', '--python', temp_py_path])
+
+    @staticmethod
+    def annotation_layers_names_items(self_obj, context):
+        # get annotations layers names
+        if bpy.app.version < (5, 1, 0):
+            return [
+                ('NONE', 'NONE', 'NONE', '', 0)
+            ]
+        else:
+            layer_names = [
+                ('NONE', 'NONE', 'NONE', '', 0),
+                ('ALL', 'ALL', 'ALL', '', 1),
+            ]
+            for i, layer in enumerate(context.scene.annotation.layers):
+                layer_names.append((layer.info, layer.info, layer.info, '', i + 2))
+            return layer_names
