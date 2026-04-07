@@ -28,7 +28,12 @@ class SaveSelected:
         # if user used option to add annotation layer
         annotations_copy = None     # temporary copy of annotations
         if add_annotation_layer != 'NONE':
-            annotations_copy = context.scene.annotation.copy()
+            if hasattr(context.scene, "annotation"):
+                # >= 5.0
+                annotations_copy = context.scene.annotation.copy()
+            else:
+                # < 5.0
+                annotations_copy = context.blend_data.grease_pencils['Annotations'].copy()
             if add_annotation_layer != 'ALL':
                 no_save_layers = (_layer for _layer in annotations_copy.layers if _layer.info != add_annotation_layer)
                 for no_save_layer in no_save_layers:
@@ -38,7 +43,12 @@ class SaveSelected:
         context.blend_data.libraries.write(temp_blend_path, data_blocks)
         # cleanup temporary data
         if annotations_copy:
-            context.blend_data.annotations.remove(annotations_copy)
+            if hasattr(context.scene, "annotation"):
+                # >= 5.0
+                context.blend_data.annotations.remove(annotations_copy)
+            else:
+                # < 5.0
+                context.blend_data.grease_pencils.remove(annotations_copy)
         # make py script for import from temporary library, placing objects in the center of the scene
         # and saving to dest file
         text_block_content = 'import bpy' + '\n'
@@ -49,7 +59,8 @@ class SaveSelected:
         text_block_content += 'dest_path="' + file_path + '"' + '\n'
         text_block_content += 'with bpy.data.libraries.load(src_path) as (data_from, data_to):' + '\n'
         text_block_content += '    data_to.objects = data_from.objects' + '\n'
-        text_block_content += '    data_to.annotations = data_from.annotations' + '\n'
+        text_block_content += '    data_to.annotations = data_from.annotations if hasattr(data_from, "annotations") else None' + '\n'
+        text_block_content += '    data_to.grease_pencils = data_from.grease_pencils if hasattr(data_from, "grease_pencils") else None' + '\n'
         text_block_content += 'for obj in data_to.objects:' + '\n'
         text_block_content += '    bpy.context.scene.collection.objects.link(obj)' + '\n'
         text_block_content += 'bpy.ops.object.select_all(action="SELECT")' + '\n'
@@ -75,6 +86,8 @@ class SaveSelected:
         # annotations
         text_block_content += 'if data_to.annotations:' + '\n'
         text_block_content += '    bpy.context.scene.annotation = data_to.annotations[0]' + '\n'
+        text_block_content += 'if data_to.grease_pencils:' + '\n'
+        text_block_content += '    bpy.context.scene.grease_pencil = data_to.grease_pencils[0]' + '\n'
         # save to dest file
         text_block_content += 'bpy.ops.wm.save_as_mainfile(filepath=dest_path)' + '\n'
         # save script to temporary directory
@@ -86,10 +99,18 @@ class SaveSelected:
     @staticmethod
     def annotation_layers_names_items(self_obj, context):
         # get annotations layers names
-        if bpy.app.version < (5, 1, 0):
+        if bpy.app.version < (4, 5, 0):
             return [
                 ('NONE', 'NONE', 'NONE', '', 0)
             ]
+        elif (4, 5, 0) <= bpy.app.version < (5, 0, 0):
+            layer_names = [
+                ('NONE', 'NONE', 'NONE', '', 0),
+                ('ALL', 'ALL', 'ALL', '', 1),
+            ]
+            for i, layer in enumerate(context.blend_data.grease_pencils['Annotations'].layers):
+                layer_names.append((layer.info, layer.info, layer.info, '', i + 2))
+            return layer_names
         else:
             layer_names = [
                 ('NONE', 'NONE', 'NONE', '', 0),

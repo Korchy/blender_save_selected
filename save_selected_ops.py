@@ -35,7 +35,7 @@ class SAVE_SELECTED_OT_save(Operator, ExportHelper):
         default=False
     )
 
-    if bpy.app.version >= (5, 1, 0):
+    if bpy.app.version >= (4, 5, 0):
         annotation_layer: EnumProperty(
             name='Annotation Layer',
             items=lambda self, context: SaveSelected.annotation_layers_names_items(self, context),
