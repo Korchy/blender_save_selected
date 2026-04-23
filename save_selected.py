@@ -33,7 +33,8 @@ class SaveSelected:
                 annotations_copy = context.scene.annotation.copy()
             else:
                 # < 5.0
-                annotations_copy = context.blend_data.grease_pencils['Annotations'].copy()
+                if 'Annotations' in context.blend_data.grease_pencils:
+                    annotations_copy = context.blend_data.grease_pencils['Annotations'].copy()
             if add_annotation_layer != 'ALL':
                 no_save_layers = (_layer for _layer in annotations_copy.layers if _layer.info != add_annotation_layer)
                 for no_save_layer in no_save_layers:
