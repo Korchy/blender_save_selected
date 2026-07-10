@@ -13,7 +13,7 @@ The selected objects will be saved to the specified file.
 
 Current add-on version
 -
-1.1.0.
+1.1.1.
 
 Blender versions
 -
@@ -30,6 +30,9 @@ Installation
 
 Version history
 -
+1.1.1.
+- Fixed bug with missed annotations in Blender 5.1 version.
+
 1.1.0.
 - Added option for saving selected annotation layer additionally for selected objects.
 

@@ -115,8 +115,9 @@ class SaveSelected:
         else:
             layer_names = [
                 ('NONE', 'NONE', 'NONE', '', 0),
-                ('ALL', 'ALL', 'ALL', '', 1),
             ]
-            for i, layer in enumerate(context.scene.annotation.layers):
-                layer_names.append((layer.info, layer.info, layer.info, '', i + 2))
+            if context.scene.annotation:
+                layer_names.append(('ALL', 'ALL', 'ALL', '', 1))
+                for i, layer in enumerate(context.scene.annotation.layers):
+                    layer_names.append((layer.info, layer.info, layer.info, '', i + 2))
             return layer_names
